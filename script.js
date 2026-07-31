@@ -173,9 +173,11 @@
     var hero = document.getElementById('hero');
     setBg(hero, route.heroImg);
 
-    document.getElementById('hero-title').textContent = route.title;
+    var journeyTitle = "Subhash's journey to Santiago via " + route.label;
+    document.getElementById('hero-title').textContent = journeyTitle;
     document.getElementById('hero-subtitle').textContent = route.subtitle;
     document.getElementById('hero-tagline').textContent = route.tagline;
+    document.title = journeyTitle;
 
     var walking = route.days.filter(function (d) { return d.km > 0; }).length;
     var stats = document.getElementById('hero-stats');
