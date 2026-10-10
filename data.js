@@ -779,8 +779,10 @@ const TEAM = [
   { name: "Kumar", role: "Pilgrim", photo: "team/kumar.jpg" },
   { name: "Lata", role: "Pilgrim", photo: "team/lata.jpg" },
   { name: "Raji", role: "Pilgrim", photo: "team/raji.jpg" },
+  { name: "Ravi", role: "Pilgrim", photo: "team/ravi.jpg" },
   { name: "Rekha", role: "Pilgrim", photo: "team/rekha.jpg" },
   { name: "Shivu", role: "Pilgrim", photo: "team/shivu.jpg" },
+  { name: "Usha", role: "Pilgrim", photo: "team/Usha.jpg" },
   { name: "Viji", role: "Pilgrim", photo: "team/viji.jpg" }
 ];
 
