@@ -52,6 +52,43 @@
     return km.toFixed(0) + ' km';
   }
 
+  function fmtElevation(m) {
+    if (!m) return '—';
+    if (state.unit === 'mi') return Math.round(m * 3.28084).toLocaleString() + ' ft';
+    return Math.round(m).toLocaleString() + ' m';
+  }
+
+  // Historical April climate averages, not a forecast — these are 2027 dates.
+  function fmtTemp(c) {
+    if (c === undefined || c === null) return '—';
+    if (state.unit === 'mi') return Math.round(c * 9 / 5 + 32) + '°F';
+    return Math.round(c) + '°C';
+  }
+
+  // Table-cell distance text: plain km/mi figure (no "Rest day"/"Train journey"
+  // prose) since the summary table has its own Day/kind context already.
+  function fmtTableDistance(km) {
+    if (!km) return '—';
+    if (state.unit === 'mi') return (km * 0.621371).toFixed(1) + ' mi';
+    return km.toFixed(0) + ' km';
+  }
+
+  // A day is 'walking' (km > 0), 'train' (explicit non-walking travel leg,
+  // e.g. the scripted return to Porto), or 'rest' (everything else, km 0).
+  function dayKind(d) {
+    if (d.type === 'train') return 'train';
+    return d.km > 0 ? 'walking' : 'rest';
+  }
+  function dayChipLabel(d) {
+    if (dayKind(d) === 'train') return 'Train journey';
+    return fmtDistance(d.km);
+  }
+  function dayChipClass(d) {
+    var kind = dayKind(d);
+    if (kind === 'train') return 'chip-train';
+    return kind === 'walking' ? 'chip-green' : 'chip-terracotta';
+  }
+
   // ---------- misc helpers ----------
 
   function currentRoute() { return ROUTES[state.routeId]; }
@@ -96,6 +133,7 @@
     renderMap(route);
     renderAirports(route);
     renderServices(route);
+    renderSummaryTable(route);
     renderDayCards(route);
     renderPacking(route);
     renderFooter(route);
@@ -156,7 +194,18 @@
     if (totalTile) totalTile.textContent = fmtDistance(route.totalKm);
 
     document.querySelectorAll('.dist-chip').forEach(function (chip) {
+      if (chip.dataset.type === 'train') return; // label doesn't depend on unit
       chip.textContent = fmtDistance(Number(chip.dataset.km));
+    });
+
+    document.querySelectorAll('.table-dist').forEach(function (cell) {
+      cell.textContent = fmtTableDistance(Number(cell.dataset.km));
+    });
+    document.querySelectorAll('.table-elev').forEach(function (cell) {
+      cell.textContent = fmtElevation(Number(cell.dataset.elev));
+    });
+    document.querySelectorAll('.table-temp').forEach(function (cell) {
+      cell.textContent = fmtTemp(Number(cell.dataset.tempc));
     });
 
     renderDayDetail(state.selectedDay);
@@ -277,7 +326,7 @@
         var dayData = route.days[idx];
         cell = document.createElement('button');
         cell.type = 'button';
-        cell.className = 'day-cell trip-day ' + (dayData.km > 0 ? 'walking' : 'rest');
+        cell.className = 'day-cell trip-day ' + dayKind(dayData);
         cell.dataset.dayIndex = idx;
         cell.innerHTML = '<span class="date-num">' + day + '</span><span class="day-badge">Day ' + dayData.day + '</span>';
         cell.addEventListener('click', function (e) {
@@ -306,7 +355,7 @@
       '<div class="detail-top">' +
         '<span class="detail-daynum">Day ' + d.day + '</span>' +
         '<span class="detail-date">' + fmtDateLong(date) + '</span>' +
-        '<span class="chip ' + (d.km > 0 ? 'chip-green' : 'chip-terracotta') + ' dist-chip" data-km="' + d.km + '">' + fmtDistance(d.km) + '</span>' +
+        '<span class="chip ' + dayChipClass(d) + ' dist-chip" data-km="' + d.km + '" data-type="' + (d.type || '') + '">' + dayChipLabel(d) + '</span>' +
       '</div>' +
       '<p class="detail-route">' + d.from + ' → ' + d.to + '</p>' +
       '<p class="detail-highlight">' + d.highlights + '</p>' +
@@ -368,7 +417,7 @@
       if (toCoord) {
         var marker = L.marker(toCoord, {
           icon: L.divIcon({
-            className: 'map-marker ' + (d.km > 0 ? 'stop-marker' : 'rest-marker'),
+            className: 'map-marker ' + (dayKind(d) === 'walking' ? 'stop-marker' : dayKind(d) === 'train' ? 'train-marker' : 'rest-marker'),
             html: String(d.day),
             iconSize: [26, 26]
           })
@@ -453,6 +502,30 @@
     return box;
   }
 
+  // ---------- daily summary table ----------
+
+  function renderSummaryTable(route) {
+    var startDate = parseISO(route.startDate);
+    var body = document.getElementById('summary-table-body');
+    body.innerHTML = '';
+
+    route.days.forEach(function (d, i) {
+      var date = addDays(startDate, i);
+      var row = document.createElement('tr');
+      row.dataset.dayIndex = i;
+      row.innerHTML =
+        '<td class="summary-day">' + d.day + '</td>' +
+        '<td class="summary-date">' + fmtDateLong(date) + '</td>' +
+        '<td>' + d.from + ' → ' + d.to + '</td>' +
+        '<td><span class="table-dist" data-km="' + d.km + '">' + fmtTableDistance(d.km) + '</span></td>' +
+        '<td><span class="table-elev" data-elev="' + (d.elevGain || 0) + '">' + fmtElevation(d.elevGain) + '</span></td>' +
+        '<td><span class="table-temp" data-tempc="' + d.avgTempC + '">' + fmtTemp(d.avgTempC) + '</span></td>' +
+        '<td class="summary-terrain">' + d.terrain + '</td>';
+      row.addEventListener('click', function () { selectDay(i, true); });
+      body.appendChild(row);
+    });
+  }
+
   // ---------- day cards ----------
 
   function renderDayCards(route) {
@@ -478,7 +551,7 @@
       body.innerHTML =
         '<div class="day-card-top">' +
           '<h3>' + d.from + ' → ' + d.to + '</h3>' +
-          '<span class="chip ' + (d.km > 0 ? 'chip-green' : 'chip-terracotta') + ' dist-chip" data-km="' + d.km + '">' + fmtDistance(d.km) + '</span>' +
+          '<span class="chip ' + dayChipClass(d) + ' dist-chip" data-km="' + d.km + '" data-type="' + (d.type || '') + '">' + dayChipLabel(d) + '</span>' +
         '</div>' +
         '<p class="day-highlights">' + d.highlights + '</p>' +
         '<div class="day-details-grid">' +
@@ -533,6 +606,9 @@
     state.selectedDay = index;
 
     document.querySelectorAll('.day-cell.trip-day').forEach(function (el) {
+      el.classList.toggle('selected', Number(el.dataset.dayIndex) === index);
+    });
+    document.querySelectorAll('#summary-table-body tr').forEach(function (el) {
       el.classList.toggle('selected', Number(el.dataset.dayIndex) === index);
     });
     renderDayDetail(index);

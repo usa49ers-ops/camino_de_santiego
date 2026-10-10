@@ -9,6 +9,7 @@
   --green-deep: #2c4a35;
   --stone: #f4efe6;
   --stone-dark: #ebe3d5;
+  --rail: #3b6e8f;
   --ink: #2a2620;
   --ink-soft: #5c554a;
   --white: #fffdf9;
@@ -309,6 +310,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .day-cell.trip-day.walking { background: var(--green); }
 .day-cell.trip-day.rest { background: var(--terracotta); }
+.day-cell.trip-day.train { background: var(--rail); }
 .day-cell.trip-day:hover { transform: translateY(-2px); }
 .day-cell.trip-day.selected { box-shadow: inset 0 0 0 3px var(--yellow); }
 .day-cell .date-num { font-size: 0.85rem; }
@@ -346,6 +348,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .chip-green { background: var(--green); }
 .chip-terracotta { background: var(--terracotta); }
+.chip-train { background: var(--rail); }
 
 .route-map {
   height: 460px;
@@ -378,6 +381,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .map-marker.stop-marker { background: var(--green); border: 2px solid var(--white); }
 .map-marker.rest-marker { background: var(--terracotta); border: 2px solid var(--white); }
+.map-marker.train-marker { background: var(--rail); border: 2px solid var(--white); }
 .map-marker.start-marker { background: var(--yellow); color: var(--ink); border: 2px solid var(--white); font-size: 1rem; }
 
 /* ---------- Airports ---------- */
@@ -425,6 +429,67 @@ button { font-family: inherit; cursor: pointer; }
   box-shadow: var(--shadow-soft);
 }
 .service-group li { font-size: 0.9rem; }
+
+/* ---------- Daily summary table ---------- */
+
+.summary-section { background: var(--stone-dark); }
+
+.summary-note { font-size: 0.9rem; margin-bottom: 1.25rem; }
+
+.summary-table-wrap {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  overflow-x: auto;
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  min-width: 720px;
+}
+
+.summary-table th {
+  text-align: left;
+  font-family: var(--font-head);
+  font-weight: 600;
+  color: var(--green-deep);
+  padding: 0.9rem 1rem;
+  border-bottom: 2px solid var(--stone-dark);
+  white-space: nowrap;
+}
+
+.summary-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--stone-dark);
+  color: var(--ink);
+  vertical-align: top;
+}
+
+.summary-table tbody tr {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.summary-table tbody tr:hover { background: var(--stone); }
+.summary-table tbody tr.selected { background: #fdf0d2; box-shadow: inset 3px 0 0 var(--yellow); }
+.summary-table tbody tr:last-child td { border-bottom: none; }
+
+.summary-day {
+  font-family: var(--font-head);
+  font-weight: 700;
+  color: var(--terracotta);
+  white-space: nowrap;
+}
+
+.table-dist, .table-elev, .table-temp { font-weight: 600; white-space: nowrap; }
+
+.summary-date { white-space: nowrap; }
+
+.summary-terrain {
+  color: var(--ink-soft);
+  min-width: 260px;
+}
 
 /* ---------- Day cards ---------- */
 
